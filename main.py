@@ -155,16 +155,12 @@ def classify(feature):
 
 
 road_risk_vector = road_risk_vector.map(classify)
-road_risk_vector = road_risk_vector.map(lambda f: f.setGeometry(None))
-
 
 # ======================================================
 # TOP 10 ROADS
 # ======================================================
 
 top10 = road_risk_vector.sort('SandRisk', False).limit(10)
-top10 = top10.map(lambda f: f.setGeometry(None))
-
 
 # ======================================================
 # EXPORT FULL ROAD RISK CSV
@@ -173,11 +169,11 @@ top10 = top10.map(lambda f: f.setGeometry(None))
 task1 = ee.batch.Export.table.toCloudStorage(
     collection=road_risk_vector,
     description='RoadRisk_Current',
-    bucket='sand-risk-bucket-jeslin',  # <-- your bucket name
+    bucket='sand-risk-bucket-jeslin',
     fileNamePrefix='RoadRisk_Current',
-    fileFormat='CSV'
+    fileFormat='CSV',
+    selectors=['Road', 'SandRisk', 'RiskClass', 'Latitude', 'Longitude']
 )
-
 
 task1.start()
 print("Road Risk CSV Export Started")
@@ -189,11 +185,14 @@ print("Road Risk CSV Export Started")
 task2 = ee.batch.Export.table.toCloudStorage(
     collection=top10,
     description='Top10_Current',
-    bucket='sand-risk-bucket-jeslin',  # <-- your bucket name
+    bucket='sand-risk-bucket-jeslin',
     fileNamePrefix='Top10_Current',
-    fileFormat='CSV'
+    fileFormat='CSV',
+    selectors=['Road', 'SandRisk', 'RiskClass', 'Latitude', 'Longitude']
 )
 
+task2.start()
+print("Top 10 CSV Export Started")
 
 task2.start()
 print("Top 10 CSV Export Started")
