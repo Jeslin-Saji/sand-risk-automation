@@ -51,7 +51,7 @@ def safe_median(collection, band):
     )
 
 # ======================================================
-# SENTINEL-2 (UPDATED DATASET)
+# SENTINEL-2 NDVI + NDSI
 # ======================================================
 
 s2 = (
@@ -169,7 +169,7 @@ road_risk_vector = road_risk_vector.map(classify)
 top10 = road_risk_vector.sort('SandRisk', False).limit(10)
 
 # ======================================================
-# EXPORT TO CLOUD STORAGE (STABLE + UNIQUE DESCRIPTION)
+# EXPORT CSV FILES
 # ======================================================
 
 timestamp = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
@@ -195,9 +195,5 @@ task2 = ee.batch.Export.table.toCloudStorage(
 task1.start()
 task2.start()
 
-print("Exports Started Successfully")
-
-task2.start()
+print("Road Risk CSV Export Started")
 print("Top 10 CSV Export Started")
-
-
