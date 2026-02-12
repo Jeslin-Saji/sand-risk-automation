@@ -30,7 +30,7 @@ START = ee.Date(start)
 SCALE = 30
 
 # ======================================================
-# LOAD ASSETS (UPDATE IF PATHS DIFFER)
+# LOAD ASSETS
 # ======================================================
 
 AOI = ee.FeatureCollection('projects/sand-risk-project/assets/Sand_AOI')
@@ -51,11 +51,11 @@ def safe_median(collection, band):
     )
 
 # ======================================================
-# SENTINEL-2 NDVI + NDSI
+# SENTINEL-2 (UPDATED DATASET)
 # ======================================================
 
 s2 = (
-    ee.ImageCollection('COPERNICUS/S2_SR')
+    ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
     .filterBounds(AOI)
     .filterDate(START, END)
     .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 40))
@@ -92,9 +92,9 @@ vv_now = safe_median(s1, 'VV').clip(AOI)
 # NORMALIZATION
 # ======================================================
 
-ndvi_norm = ndvi_now.unitScale(-0.2,0.6).clamp(0,1)
-ndsi_norm = ndsi_now.unitScale(0,0.6).clamp(0,1)
-vv_norm   = vv_now.unitScale(-25,-5).clamp(0,1)
+ndvi_norm = ndvi_now.unitScale(-0.2, 0.6).clamp(0, 1)
+ndsi_norm = ndsi_now.unitScale(0, 0.6).clamp(0, 1)
+vv_norm   = vv_now.unitScale(-25, -5).clamp(0, 1)
 
 # ======================================================
 # FINAL SAND RISK SCORE
@@ -105,7 +105,7 @@ sand_risk = (
     .add(ndsi_norm.multiply(0.40))
     .add(vv_norm.multiply(0.25))
     .rename('SandRisk')
-    .clamp(0,1)
+    .clamp(0, 1)
 )
 
 # ======================================================
@@ -119,7 +119,6 @@ road_risk_vector = sand_risk.reduceRegions(
     tileScale=8
 )
 
-# Add Risk Class
 LOW = 0.35
 MED = 0.60
 
@@ -145,14 +144,21 @@ def classify(feature):
         )
     )
 
+    road_name = ee.String(
+        ee.Algorithms.If(
+            ee.Algorithms.IsEqual(feature.get('Road'), None),
+            'road',
+            feature.get('Road')
+        )
+    )
+
     return ee.Feature(None, {
-        'Road': feature.get('Road'),
+        'Road': road_name,
         'SandRisk': risk,
         'RiskClass': risk_class,
         'Latitude': centroid.coordinates().get(1),
         'Longitude': centroid.coordinates().get(0)
     })
-
 
 road_risk_vector = road_risk_vector.map(classify)
 
@@ -163,7 +169,7 @@ road_risk_vector = road_risk_vector.map(classify)
 top10 = road_risk_vector.sort('SandRisk', False).limit(10)
 
 # ======================================================
-# EXPORT FULL ROAD RISK CSV
+# EXPORT TO CLOUD STORAGE (STABLE + UNIQUE DESCRIPTION)
 # ======================================================
 
 timestamp = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
@@ -177,13 +183,6 @@ task1 = ee.batch.Export.table.toCloudStorage(
     selectors=['Road', 'SandRisk', 'RiskClass', 'Latitude', 'Longitude']
 )
 
-task1.start()
-print("Road Risk CSV Export Started")
-
-# ======================================================
-# EXPORT TOP 10 CSV
-# ======================================================
-
 task2 = ee.batch.Export.table.toCloudStorage(
     collection=top10,
     description='Top10_' + timestamp,
@@ -193,8 +192,10 @@ task2 = ee.batch.Export.table.toCloudStorage(
     selectors=['Road', 'SandRisk', 'RiskClass', 'Latitude', 'Longitude']
 )
 
+task1.start()
 task2.start()
-print("Top 10 CSV Export Started")
+
+print("Exports Started Successfully")
 
 task2.start()
 print("Top 10 CSV Export Started")
