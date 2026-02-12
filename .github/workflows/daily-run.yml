@@ -1,0 +1,27 @@
+name: Daily Sand Risk Run
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *'  # Runs daily at 3 AM UTC
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Script
+        env:
+          EE_SERVICE_ACCOUNT: ${{ secrets.EE_SERVICE_ACCOUNT }}
+        run: python main.py
