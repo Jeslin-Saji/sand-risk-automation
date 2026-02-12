@@ -134,6 +134,8 @@ def classify(feature):
         )
     )
 
+    centroid = feature.geometry().centroid()
+
     risk_class = ee.String(
         ee.Algorithms.If(
             risk.lte(LOW), 'Low',
@@ -143,9 +145,12 @@ def classify(feature):
         )
     )
 
-    return feature.set({
+    return ee.Feature(None, {
+        'Road': feature.get('Road'),
         'SandRisk': risk,
-        'RiskClass': risk_class
+        'RiskClass': risk_class,
+        'Latitude': centroid.coordinates().get(1),
+        'Longitude': centroid.coordinates().get(0)
     })
 
 
