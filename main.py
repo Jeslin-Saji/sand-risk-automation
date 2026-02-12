@@ -124,7 +124,16 @@ LOW = 0.35
 MED = 0.60
 
 def classify(feature):
-    risk = ee.Number(feature.get('mean'))
+    raw_risk = feature.get('mean')
+
+    risk = ee.Number(
+        ee.Algorithms.If(
+            ee.Algorithms.IsEqual(raw_risk, None),
+            0,
+            raw_risk
+        )
+    )
+
     risk_class = ee.String(
         ee.Algorithms.If(
             risk.lte(LOW), 'Low',
@@ -133,10 +142,12 @@ def classify(feature):
             )
         )
     )
+
     return feature.set({
         'SandRisk': risk,
         'RiskClass': risk_class
     })
+
 
 road_risk_vector = road_risk_vector.map(classify)
 
