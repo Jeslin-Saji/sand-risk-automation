@@ -155,12 +155,16 @@ def classify(feature):
 
 
 road_risk_vector = road_risk_vector.map(classify)
+road_risk_vector = road_risk_vector.map(lambda f: f.setGeometry(None))
+
 
 # ======================================================
 # TOP 10 ROADS
 # ======================================================
 
 top10 = road_risk_vector.sort('SandRisk', False).limit(10)
+top10 = top10.map(lambda f: f.setGeometry(None))
+
 
 # ======================================================
 # EXPORT FULL ROAD RISK CSV
