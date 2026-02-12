@@ -16,5 +16,7 @@ ee.Initialize(credentials)
 print("Earth Engine Initialized Successfully")
 
 # Test simple request
-image = ee.Image("COPERNICUS/S2_SR/20220101T000239_20220101T000239_T56MNN")
-print("Test Image ID:", image.getInfo()["id"])
+# Simple dataset test
+collection = ee.ImageCollection("COPERNICUS/S2_SR").limit(1)
+print("Collection size:", collection.size().getInfo())
+
