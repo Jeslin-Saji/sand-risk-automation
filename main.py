@@ -166,9 +166,11 @@ top10 = road_risk_vector.sort('SandRisk', False).limit(10)
 # EXPORT FULL ROAD RISK CSV
 # ======================================================
 
+timestamp = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
+
 task1 = ee.batch.Export.table.toCloudStorage(
     collection=road_risk_vector,
-    description='RoadRisk_Current',
+    description='RoadRisk_' + timestamp,
     bucket='sand-risk-bucket-jeslin',
     fileNamePrefix='RoadRisk_Current',
     fileFormat='CSV',
@@ -184,7 +186,7 @@ print("Road Risk CSV Export Started")
 
 task2 = ee.batch.Export.table.toCloudStorage(
     collection=top10,
-    description='Top10_Current',
+    description='Top10_' + timestamp,
     bucket='sand-risk-bucket-jeslin',
     fileNamePrefix='Top10_Current',
     fileFormat='CSV',
